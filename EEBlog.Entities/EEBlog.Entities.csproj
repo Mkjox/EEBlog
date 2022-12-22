@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\EEBlog.Shared\EEBlog.Shared.csproj" />
+  </ItemGroup>
+
 </Project>
