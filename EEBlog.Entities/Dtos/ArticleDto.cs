@@ -1,4 +1,6 @@
-﻿using System;
+﻿using EEBlog.Entities.Concrete;
+using EEBlog.Shared.Entities.Abstract;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,7 +8,8 @@ using System.Threading.Tasks;
 
 namespace EEBlog.Entities.Dtos
 {
-    internal class ArticleDto
+    public class ArticleDto : DtoGetBase
     {
+        public Article Article { get; set; }
     }
 }

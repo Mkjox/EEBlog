@@ -11,6 +11,26 @@ namespace EEBlog.Data.Concrete
     {
         //private readonly EEBlogContext _context;
         //private EfArticleRepository _articleRepository;
+        //private EFCategoryRepository
 
+        public IArticleRepository Articles => throw new NotImplementedException();
+
+        public ICategoryRepository Categories => throw new NotImplementedException();
+
+        public ICommentRepository Comments => throw new NotImplementedException();
+
+        public IRoleRepository Roles => throw new NotImplementedException();
+
+        public IUserRepository Users => throw new NotImplementedException();
+
+        public ValueTask DisposeAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<int> SaveAsync()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

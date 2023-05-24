@@ -4,10 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EEBlog.Entities.Dtos
+namespace EEBlog.Data.Concrete.EntityFramework.Repositories
 {
-    public class ArticleUpdateDto
+    public class EfCommentRepository
     {
-        //I will add these later
     }
 }
