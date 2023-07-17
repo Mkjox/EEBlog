@@ -21,10 +21,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Concrete\EntityFramework\Mappings\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\EEBlog.Entities\EEBlog.Entities.csproj" />
   </ItemGroup>
 

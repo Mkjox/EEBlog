@@ -9,5 +9,6 @@ namespace EEBlog.Entities.Concrete
 {
     public class Category : EntityBase, IEntity
     {
+        public object Articles { get; set; }
     }
 }
