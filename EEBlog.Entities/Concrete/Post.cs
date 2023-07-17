@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EEBlog.Data.Concrete.EntityFramework.Repositories
+namespace EEBlog.Entities.Concrete
 {
-    public class EfCategoryRepository
+    public class Post
     {
     }
 }

@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EEBlog.Entities.Dtos
+namespace EEBlog.Data.Abstract
 {
-    internal class CategoryDto
+    public interface IPostRepository
     {
     }
 }

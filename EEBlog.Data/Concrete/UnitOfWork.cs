@@ -9,19 +9,20 @@ namespace EEBlog.Data.Concrete
 {
     public class UnitOfWork : IUnitOfWork
     {
-        //private readonly EEBlogContext _context;
+        private readonly EEBlogContext _context;
         //private EfArticleRepository _articleRepository;
         //private EFCategoryRepository
 
-        public IArticleRepository Articles => throw new NotImplementedException();
-
-        public ICategoryRepository Categories => throw new NotImplementedException();
-
-        public ICommentRepository Comments => throw new NotImplementedException();
-
-        public IRoleRepository Roles => throw new NotImplementedException();
 
         public IUserRepository Users => throw new NotImplementedException();
+
+        public IPostRepository PostRepository => throw new NotImplementedException();
+
+        public ICommentRepository CommentRepository => throw new NotImplementedException();
+
+        public ICategoryRepository CategoryRepository => throw new NotImplementedException();
+
+        public IRoleRepository RoleRepository => throw new NotImplementedException();
 
         public ValueTask DisposeAsync()
         {

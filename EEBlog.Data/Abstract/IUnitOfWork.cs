@@ -8,11 +8,11 @@ namespace EEBlog.Data.Abstract
 {
     public interface IUnitOfWork : IAsyncDisposable
     {
-        IArticleRepository Articles { get; }
-        ICategoryRepository Categories { get; }
-        ICommentRepository Comments { get; }
-        IRoleRepository Roles { get; }
-        IUserRepository Users { get; }
+        IPostRepository PostRepository { get; }
+        ICommentRepository CommentRepository { get; }
+        ICategoryRepository CategoryRepository { get; }
+        IRoleRepository RoleRepository { get; }
+
         Task<int> SaveAsync();
     }
 }
