@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EEBlog.Entities\EEBlog.Entities.csproj" />
+    <ProjectReference Include="..\EEBlog.Shared\EEBlog.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

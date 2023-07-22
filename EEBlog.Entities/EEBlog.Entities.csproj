@@ -10,8 +10,4 @@
     <ProjectReference Include="..\EEBlog.Shared\EEBlog.Shared.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Dtos\" />
-  </ItemGroup>
-
 </Project>
