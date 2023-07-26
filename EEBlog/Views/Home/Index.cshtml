@@ -1,8 +1,10 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    Layout = "_Layout";
+    ViewBag.Title = "Home Page";
 }
 
 <div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <div>
+    <a asp-area="Admin" asp-controller="Home" asp-action="Index" class="size2 m1-txt1 flex-c-m how-btn1 trans-04"></a>
+    </div>
 </div>
