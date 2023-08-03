@@ -9,7 +9,6 @@
   <ItemGroup>
     <Folder Include="AutoMapper\Profiles\" />
     <Folder Include="Extensions\" />
-    <Folder Include="Utilities\" />
   </ItemGroup>
 
   <ItemGroup>

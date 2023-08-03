@@ -14,11 +14,11 @@ using System.Threading.Tasks;
 
 namespace EEBlog.Services.Concrete
 {
-    public class ArticleManager : ManagerBase, IPostService
+    public class PostManager : ManagerBase, IPostService
     {
         private readonly UserManager<User> _userManager;
 
-        public ArticleManager(IUnitOfWork unitOfWork, IMapper mapper, UserManager<User> userManager) : base(unitOfWork, mapper)
+        public PostManager(IUnitOfWork unitOfWork, IMapper mapper, UserManager<User> userManager) : base(unitOfWork, mapper)
         {
             _userManager = userManager;
         }
