@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace EEBlog.Services.Utilities
+﻿namespace EEBlog.Services.Utilities
 {
     public static class Messages
     {
@@ -34,7 +28,7 @@ namespace EEBlog.Services.Utilities
             {
                 return $"Successfully added the category named as {categoryName}.";
             }
-            
+
             public static string Update(string categoryName)
             {
                 return $"Successfully updated the category named as {categoryName}.";
@@ -105,7 +99,7 @@ namespace EEBlog.Services.Utilities
             public static string NotFound(bool isPlural)
             {
                 if (isPlural) return $"Couldn't find any comments.";
-                 return $"Couldn't find the comment.";
+                return $"Couldn't find the comment.";
             }
 
             public static string NotFoundById(int commentId)

@@ -11,18 +11,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Areas\Admin\Models\" />
     <Folder Include="Areas\Admin\ViewComponents\" />
     <Folder Include="Areas\Admin\Views\Category\" />
     <Folder Include="Areas\Admin\Views\Comment\" />
     <Folder Include="Areas\Admin\Views\User\" />
-    <Folder Include="Areas\Admin\Views\Shared\" />
     <Folder Include="wwwroot\AdminLTE\" />
     <Folder Include="wwwroot\BlogHome\" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNet.Identity.Core" Version="2.2.4" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="6.0.15" />
   </ItemGroup>
 
 </Project>
