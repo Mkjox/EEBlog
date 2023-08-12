@@ -29,9 +29,14 @@ namespace EEBlog.Services.Concrete
             post.CreatedByName = createdByName;
             post.ModifiedByName = createdByName;
             post.UserId = userId;
-            await UnitOfWork.Post.AddAsync(post);
+            await UnitOfWork.Posts.AddAsync(post);
             await UnitOfWork.SaveAsync();
             return new Result(ResultStatus.Success, Messages.PostMessage.Add(post.Title));
+        }
+
+        public async Task<IDataResult<PostDto>> DeleteAsync(int articleId, string modifiedByName)
+        {
+            var post = await UnitOfWork.Post
         }
     }
 }

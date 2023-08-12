@@ -25,8 +25,4 @@
     <ProjectReference Include="..\EEBlog.Shared\EEBlog.Shared.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Concrete\EntityFramework\Repositories\" />
-  </ItemGroup>
-
 </Project>

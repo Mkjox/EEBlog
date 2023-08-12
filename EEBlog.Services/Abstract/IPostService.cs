@@ -8,6 +8,5 @@ namespace EEBlog.Services.Abstract
 {
     public interface IPostService
     {
-        
     }
 }
