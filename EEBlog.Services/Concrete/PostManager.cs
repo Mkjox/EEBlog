@@ -34,9 +34,9 @@ namespace EEBlog.Services.Concrete
             return new Result(ResultStatus.Success, Messages.PostMessage.Add(post.Title));
         }
 
-        public async Task<IDataResult<PostDto>> DeleteAsync(int articleId, string modifiedByName)
+        public async Task<IDataResult<PostDto>> DeleteAsync(int postId, string modifiedByName)
         {
-            var post = await UnitOfWork.Post
+            var post = await UnitOfWork.Posts.GetAsync(p=>p.Id == postId);
         }
     }
 }
