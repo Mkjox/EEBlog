@@ -33,7 +33,8 @@ namespace EEBlog.Entities.Dtos
 
         [DisplayName("Date")]
         [Required(ErrorMessage = "{0} area can't be empty.")]
-        [DisplayFormat(ApplyFormatInEditMode = true, DateFormatString = "{0:dd/MM/yyyy}")]
+        [DisplayFormat(ApplyFormatInEditMode = true)]
+        // put this after ApplyFormatInEditMode -> DateFormatString = "{0:dd/MM/yyyy}"
         public DateTime Date { get; set; }
 
         [DisplayName("Seo Author")]
