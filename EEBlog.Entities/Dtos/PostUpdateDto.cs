@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace EEBlog.Entities.Dtos
 {
-    internal class PostUpdateDto
+    public class PostUpdateDto
     {
         [Required]
         public int Id { get; set; }
