@@ -12,7 +12,8 @@ if (!app.Environment.IsDevelopment())
     app.UseStatusCodePages();
 
 }
-else { 
+else
+{
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
