@@ -5,6 +5,7 @@ using EEBlog.Entities.Concrete;
 using EEBlog.Entities.Dtos;
 using EEBlog.Services.Abstract;
 using EEBlog.Services.Utilities;
+using EEBlog.Shared.Entities.Concrete;
 using EEBlog.Shared.Utilities.Results.Abstract;
 using EEBlog.Shared.Utilities.Results.ComplexTypes;
 using EEBlog.Shared.Utilities.Results.Concrete;
@@ -12,6 +13,7 @@ using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -26,34 +28,103 @@ namespace EEBlog.Services.Concrete
             _userManager = userManager;
         }
 
-        public Task<IResult> AddAsync(PostAddDto postAddDto, string createdByName, int userId)
+        public async Task<IResult> AddAsync(PostAddDto postAddDto, string createdByName, int userId)
         {
-            throw new NotImplementedException();
+            var post = Mapper.Map<Post>(postAddDto);
+            post.CreatedByName = createdByName;
+            post.ModifiedByName = createdByName;
+            post.UserId = userId;
+            await UnitOfWork.Posts.AddAsync(post);
+            await UnitOfWork.SaveAsync();
+            return new Result(ResultStatus.Success, Messages.PostMessage.Add(post.Title));
         }
 
-        public Task<IDataResult<int>> CountAsync()
+        public async Task<IDataResult<int>> CountAsync()
         {
-            throw new NotImplementedException();
+            var postCount = await UnitOfWork.Posts.CountAsync();
+            if (postCount > -1)
+            {
+                return new DataResult<int>(ResultStatus.Success, postCount);
+            }
+            else
+            {
+                return new DataResult<int>(ResultStatus.Error, $"There is an unexpected error.", -1);
+            }
         }
 
-        public Task<IDataResult<int>> CountByNonDeletedAsync()
+        public async Task<IDataResult<int>> CountByNonDeletedAsync()
         {
-            throw new NotImplementedException();
+            var postsCount = await UnitOfWork.Posts.CountAsync(p => !p.IsDeleted);
+            if (postsCount > -1)
+            {
+                return new DataResult<int>(ResultStatus.Success, postsCount);
+            }
+            else
+            {
+                return new DataResult<int>(ResultStatus.Error, $"There is an unexpected error.", -1);
+            }
         }
 
-        public Task<IDataResult<PostDto>> DeleteAsync(int postId, string modifiedByName)
+        public async Task<IDataResult<PostDto>> DeleteAsync(int postId, string modifiedByName)
         {
-            throw new NotImplementedException();
+            var post = await UnitOfWork.Posts.GetAsync(p => p.Id == postId);
+            if (post != null)
+            {
+                post.IsDeleted = true;
+                post.IsActive = false;
+                post.ModifiedByName = modifiedByName;
+                //post.ModifiedDate = DateTime.Now;
+                var deletedPost = await UnitOfWork.Posts.UpdateAsync(post);
+                return new DataResult<PostDto>(ResultStatus.Success, Messages.PostMessage.Delete(deletedPost.Title), new PostDto
+                {
+                    Post = deletedPost,
+                    ResultStatus = ResultStatus.Success,
+                    Message = Messages.PostMessage.Delete(deletedPost.Title)
+                });
+            }
+            return new DataResult<PostDto>(ResultStatus.Error, Messages.PostMessage.NotFound(isPlural: false), new PostDto
+            {
+                Post = null,
+                ResultStatus = ResultStatus.Error,
+                Message = Messages.PostMessage.NotFound(isPlural: false)
+            });
         }
 
-        public Task<IDataResult<PostListDto>> GetAllAsync()
+        public async Task<IDataResult<PostListDto>> GetAllAsync()
         {
-            throw new NotImplementedException();
+            var posts = await UnitOfWork.Posts.GetAllAsync(null, p => p.User, p => p.Category);
+            if (posts.Count > -1)
+            {
+                return new DataResult<PostListDto>(ResultStatus.Success, new PostListDto
+                {
+                    Posts = posts,
+                    ResultStatus = ResultStatus.Success
+                });
+            }
+            return new DataResult<PostListDto>(ResultStatus.Error, Messages.PostMessage.NotFound(isPlural: true), null);
         }
 
-        public Task<IDataResult<PostListDto>> GetAllAsyncV2(int? categoryId, int? userId, bool? isActive, bool? isDeleted, int currentPage, int pageSize, OrderByGeneral orderBy, bool isAscending, bool includeCategory, bool includeComments, bool includeUser)
+        public async Task<IDataResult<PostListDto>> GetAllAsyncV2(int? categoryId, int? userId, bool? isActive, bool? isDeleted, int currentPage, int pageSize, OrderByGeneral orderBy, bool isAscending, bool includeCategory, bool includeComments, bool includeUser)
         {
-            throw new NotImplementedException();
+            List<Expression<Func<Post, bool>>> predicates = new List<Expression<Func<Post, bool>>>();
+            List<Expression<Func<Post, object>>> includes = new List<Expression<Func<Post, object>>>();
+
+            // predicates
+            if (categoryId.HasValue)
+            {
+                if(!await UnitOfWork.Categories.AnyAsync(c=>c.Id == categoryId.Value))
+                {
+                    return new DataResult<PostListDto>(ResultStatus.Warning, Messages.General.ValidationError(), null, new List<ValidationError>
+                    {
+                        new ValidationError
+                        {
+                            PropertyName = "categoryId",
+                            Message = Messages.CategoryMessage.NotFoundById(categoryId.Value)
+                        }
+                    });
+                }
+                predicates.Add(p => p.CategoryId == categoryId.Value);
+            }
         }
 
         public Task<IDataResult<PostListDto>> GetAllByCategoryAsync(int categoryId)
