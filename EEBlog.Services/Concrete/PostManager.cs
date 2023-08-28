@@ -10,6 +10,7 @@ using EEBlog.Shared.Utilities.Results.Abstract;
 using EEBlog.Shared.Utilities.Results.ComplexTypes;
 using EEBlog.Shared.Utilities.Results.Concrete;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -112,7 +113,7 @@ namespace EEBlog.Services.Concrete
             // predicates
             if (categoryId.HasValue)
             {
-                if(!await UnitOfWork.Categories.AnyAsync(c=>c.Id == categoryId.Value))
+                if (!await UnitOfWork.Categories.AnyAsync(c => c.Id == categoryId.Value))
                 {
                     return new DataResult<PostListDto>(ResultStatus.Warning, Messages.General.ValidationError(), null, new List<ValidationError>
                     {
@@ -125,6 +126,55 @@ namespace EEBlog.Services.Concrete
                 }
                 predicates.Add(p => p.CategoryId == categoryId.Value);
             }
+
+            if (userId.HasValue)
+            {
+                if (!await _userManager.Users.AnyAsync(u => u.Id == userId.Value))
+                {
+                    return new DataResult<PostListDto>(ResultStatus.Warning, Messages.General.ValidationError(), null, new List<ValidationError> {
+                        new ValidationError
+                        {
+                            PropertyName = "userId",
+                            Message = Messages.UserMessage.NotFoundById(userId.Value)
+                        }
+                    });
+                }
+                predicates.Add(p => p.UserId == userId.Value);
+            }
+            if (isActive.HasValue) predicates.Add(p => p.IsActive == isActive.Value);
+            if (isDeleted.HasValue) predicates.Add(p => p.IsDeleted == isDeleted.Value);
+            // includes
+            if (includeCategory) includes.Add(p => p.Category);
+            if (includeComments) includes.Add(p => p.Comments);
+            if (includeUser) includes.Add(p => p.User);
+            var posts = await UnitOfWork.Posts.GetAllAsyncV2(predicates, includes);
+
+            IOrderedEnumerable<Post> sortedPosts;
+
+            switch (orderBy)
+            {
+                case OrderByGeneral.Id:
+                    sortedPosts = isAscending ? posts.OrderBy(p => p.Id) : posts.OrderByDescending(p => p.Id);
+                    break;
+                case OrderByGeneral.Az:
+                    sortedPosts = isAscending ? posts.OrderBy(p => p.Title) : posts.OrderByDescending(p => p.Title);
+                    break;
+                default:
+                    sortedPosts = isAscending ? posts.OrderBy(p => p.CreatedDate) : posts.OrderByDescending(p => p.CreatedDate);
+                    break;
+                // When it comes to dates, ascending order would mean that the oldest ones come first and the most recent ones last.
+            }
+
+            return new DataResult<PostListDto>(ResultStatus.Success, new PostListDto
+            {
+                Posts = sortedPosts.Skip((currentPage - 1) * pageSize).Take(pageSize).ToList(),
+                CategoryId = categoryId.HasValue ? categoryId.Value : null,
+                CurrentPage = currentPage,
+                PageSize = pageSize,
+                IsAscending = isAscending,
+                TotalCount = posts.Count,
+                ResultStatus = ResultStatus.Success,
+            });
         }
 
         public Task<IDataResult<PostListDto>> GetAllByCategoryAsync(int categoryId)

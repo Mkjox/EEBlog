@@ -1,12 +1,7 @@
 ﻿using EEBlog.Data.Concrete.EntityFramework.Mappings;
 using EEBlog.Entities.Concrete;
-using Microsoft.AspNet.Identity.EntityFramework;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EEBlog.Data.Concrete.EntityFramework.Contexts
 {
@@ -16,10 +11,10 @@ namespace EEBlog.Data.Concrete.EntityFramework.Contexts
         public DbSet<Post> Posts { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<Comment> Comments { get; set; }
-        //public DbSet<Log> Logs { get; set; }
+        public DbSet<Log> Logs { get; set; }
 
         //lacks options and base
-        public EEBlogContext(DbContextOptions<EEBlogContext>) : base(options)
+        public EEBlogContext(DbContextOptions<EEBlogContext> options) : base(options)
         {
         }
 
@@ -31,6 +26,7 @@ namespace EEBlog.Data.Concrete.EntityFramework.Contexts
             modelBuilder.ApplyConfiguration(new CommentMap());
             modelBuilder.ApplyConfiguration(new RoleMap());
             modelBuilder.ApplyConfiguration(new UserMap());
+            modelBuilder.ApplyConfiguration(new RoleClaimMap());
             // Don't forget to add others
         }
     }
