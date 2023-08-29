@@ -8,8 +8,11 @@ using System.Threading.Tasks;
 
 namespace EEBlog.Entities.Dtos
 {
-    public class CategoryAddDto
+    public class CategoryUpdateDto
     {
+        [Required]
+        public int Id { get; set; }
+
         [DisplayName("Category Name")]
         [Required(ErrorMessage = "{0} can't be empty.")]
         [MaxLength(70, ErrorMessage = "{0} can't be more than {1} characters.")]
@@ -29,5 +32,9 @@ namespace EEBlog.Entities.Dtos
         [DisplayName("Is it Active?")]
         [Required(ErrorMessage = "{0} can't be empty.")]
         public bool IsActive { get; set; }
+
+        [DisplayName("Is it Deleted?")]
+        [Required(ErrorMessage = "{0} can't be empty.")]
+        public bool IsDeleted { get; set; }
     }
 }
