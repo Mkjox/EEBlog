@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EEBlog.Entities.Concrete
 {
-    public class Role
+    public class Role : IdentityRole<int>
     {
     }
 }
