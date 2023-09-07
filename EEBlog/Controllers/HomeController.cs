@@ -3,6 +3,7 @@ using EEBlog.Entities.Dtos;
 using EEBlog.Models;
 using EEBlog.Services.Abstract;
 using EEBlog.Shared.Utilities.Helpers.Abstract;
+using EEBlog.Shared.Utilities.Results.ComplexTypes;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 
@@ -63,6 +64,15 @@ namespace EEBlog.Controllers
                 return View();
             }
             return View(emailSendDto);
+        }
+
+        [Route("random-post")]
+        [HttpGet]
+        public async Task<IActionResult> GetRandom()
+        {
+            var result = await _postService.GetAllByNonDeletedAndActiveAsync();
+            if (result.ResultStatus == ResultStatus.Success) return View(result.Data);
+            return NotFound();
         }
     }
 }

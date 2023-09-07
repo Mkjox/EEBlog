@@ -13,13 +13,11 @@ namespace EEBlog.Data.Concrete.EntityFramework.Contexts
         public DbSet<Comment> Comments { get; set; }
         public DbSet<Log> Logs { get; set; }
 
-        //lacks options and base
         public EEBlogContext(DbContextOptions<EEBlogContext> options) : base(options)
         {
         }
 
-        //Don't forget to add override
-        protected void OnModelCreating(ModelBuilder modelBuilder)
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfiguration(new PostMap());
             modelBuilder.ApplyConfiguration(new CategoryMap());
@@ -27,7 +25,11 @@ namespace EEBlog.Data.Concrete.EntityFramework.Contexts
             modelBuilder.ApplyConfiguration(new RoleMap());
             modelBuilder.ApplyConfiguration(new UserMap());
             modelBuilder.ApplyConfiguration(new RoleClaimMap());
-            // Don't forget to add others
+            modelBuilder.ApplyConfiguration(new UserClaimMap());
+            modelBuilder.ApplyConfiguration(new UserLoginMap());
+            modelBuilder.ApplyConfiguration(new UserRoleMap());
+            modelBuilder.ApplyConfiguration(new UserTokenMap());
+            modelBuilder.ApplyConfiguration(new LogMap());
         }
     }
 }
