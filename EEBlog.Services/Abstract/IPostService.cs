@@ -22,7 +22,7 @@ namespace EEBlog.Services.Abstract
         Task<IDataResult<PostListDto>> GetAllByDeletedAsync();
         Task<IDataResult<PostListDto>> GetAllByViewCountAsync(bool isAscending, int? takeSize);
         Task<IDataResult<PostListDto>> GetAllByPagingAsync(int? categoryId, int currentPage = 1, int pageSize = 5, bool isAscending = false);
-        Task<IDataResult<PostListDto>> GetAllByUserIdOnFilter(int userId, FilterBy filterBy, OrderByGeneral orderBy, bool isAscending, int takeSize, int categoryId, DateTime startAt, DateTime endAt, int minViewCount, int maxViewCount, int minCommentCount, int maxCommentCount);
+        Task<IDataResult<PostListDto>> GetAllByUserIdOnFilter(int userId, FilterBy filterBy, OrderBy orderBy, bool isAscending, int takeSize, int categoryId, DateTime startAt, DateTime endAt, int minViewCount, int maxViewCount, int minCommentCount, int maxCommentCount);
         Task<IDataResult<PostListDto>> SearchAsync(string keyword, int currentPage = 1, int pageSize = 5, bool isAscending = false);
         Task<IResult> IncreaseViewCountAsync(int postId);
         Task<IResult> AddAsync(PostAddDto postAddDto, string createdByName, int userId);

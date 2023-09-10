@@ -162,7 +162,7 @@ namespace EEBlog.Services.Concrete
                 default:
                     sortedPosts = isAscending ? posts.OrderBy(p => p.CreatedDate) : posts.OrderByDescending(p => p.CreatedDate);
                     break;
-                // When it comes to dates, ascending order would mean that the oldest ones come first and the most recent ones last.
+                    // When it comes to dates, ascending order would mean that the oldest ones come first and the most recent ones last.
             }
 
             return new DataResult<PostListDto>(ResultStatus.Success, new PostListDto
@@ -177,49 +177,244 @@ namespace EEBlog.Services.Concrete
             });
         }
 
-        public Task<IDataResult<PostListDto>> GetAllByCategoryAsync(int categoryId)
+        public async Task<IDataResult<PostListDto>> GetAllByCategoryAsync(int categoryId)
         {
-            throw new NotImplementedException();
+            var result = await UnitOfWork.Categories.AnyAsync(c => c.Id == categoryId);
+            if (result)
+            {
+                var posts = await UnitOfWork.Posts.GetAllAsync(p => p.CategoryId == categoryId && !p.IsDeleted && p.IsActive, po => po.User, po => po.Category);
+                if (posts.Count > -1)
+                {
+                    return new DataResult<PostListDto>(ResultStatus.Success, new PostListDto
+                    {
+                        Posts = posts,
+                        ResultStatus = ResultStatus.Success
+                    });
+                }
+                return new DataResult<PostListDto>(ResultStatus.Error, Messages.PostMessage.NotFound(isPlural: true), null);
+            }
+            return new DataResult<PostListDto>(ResultStatus.Error, Messages.PostMessage.NotFound(isPlural: false), null);
         }
 
-        public Task<IDataResult<PostListDto>> GetAllByDeletedAsync()
+        public async Task<IDataResult<PostListDto>> GetAllByDeletedAsync()
         {
-            throw new NotImplementedException();
+            var posts = await UnitOfWork.Posts.GetAllAsync(p => p.IsDeleted, po => po.User, po => po.Category); //Fetch deleted ones
+            if (posts.Count > -1)
+            {
+                return new DataResult<PostListDto>(ResultStatus.Success, new PostListDto
+                {
+                    Posts = posts,
+                    ResultStatus = ResultStatus.Success
+                });
+            }
+            return new DataResult<PostListDto>(ResultStatus.Error, Messages.PostMessage.NotFound(isPlural: true), null);
         }
 
-        public Task<IDataResult<PostListDto>> GetAllByNonDeletedAndActiveAsync()
+        public async Task<IDataResult<PostListDto>> GetAllByNonDeletedAndActiveAsync()
         {
-            throw new NotImplementedException();
+            var posts = await UnitOfWork.Posts.GetAllAsync(p => !p.IsDeleted && p.IsActive, po => po.User, po => po.Category); // Fetch active and not deleted posts
+            if (posts.Count > -1)
+            {
+                return new DataResult<PostListDto>(ResultStatus.Success, new PostListDto
+                {
+                    Posts = posts,
+                    ResultStatus = ResultStatus.Success
+                });
+            }
+            return new DataResult<PostListDto>(ResultStatus.Error, Messages.PostMessage.NotFound(isPlural: true), null);
         }
 
-        public Task<IDataResult<PostListDto>> GetAllByNonDeletedAsync()
+        public async Task<IDataResult<PostListDto>> GetAllByNonDeletedAsync()
         {
-            throw new NotImplementedException();
+            var posts = await UnitOfWork.Posts.GetAllAsync(p => !p.IsDeleted, po => po.User, po => po.Category);
+            if (posts.Count > -1)
+            {
+                return new DataResult<PostListDto>(ResultStatus.Success, new PostListDto
+                {
+                    Posts = posts,
+                    ResultStatus = ResultStatus.Success
+                });
+            }
+            return new DataResult<PostListDto>(ResultStatus.Error, Messages.PostMessage.NotFound(isPlural: true), null);
         }
 
-        public Task<IDataResult<PostListDto>> GetAllByPagingAsync(int? categoryId, int currentPage = 1, int pageSize = 5, bool isAscending = false)
+        public async Task<IDataResult<PostListDto>> GetAllByPagingAsync(int? categoryId, int currentPage = 1, int pageSize = 5, bool isAscending = false)
         {
-            throw new NotImplementedException();
+            pageSize = pageSize > 20 ? 20 : pageSize;
+            var posts = categoryId == null
+                ? await UnitOfWork.Posts.GetAllAsync(p => p.IsActive && !p.IsDeleted, p => p.Category, p => p.User)
+                : await UnitOfWork.Posts.GetAllAsync(p => p.CategoryId == categoryId && p.IsActive && !p.IsDeleted, p => p.Category, p => p.User);
+
+            var sortedPosts = isAscending
+                ? posts.OrderBy(p => p.CreatedDate).Skip((currentPage - 1) * pageSize).Take(pageSize).ToList()
+                : posts.OrderByDescending(p => p.CreatedDate).Skip((currentPage - 1) * pageSize).Take(pageSize).ToList();
+            return new DataResult<PostListDto>(ResultStatus.Success, new PostListDto
+            {
+                Posts = sortedPosts,
+                CategoryId = categoryId == null ? null : categoryId.Value,
+                CurrentPage = currentPage,
+                PageSize = pageSize,
+                TotalCount = posts.Count,
+                IsAscending = isAscending
+            });
         }
 
-        public Task<IDataResult<PostListDto>> GetAllByUserIdOnFilter(int userId, FilterBy filterBy, OrderByGeneral orderBy, bool isAscending, int takeSize, int categoryId, DateTime startAt, DateTime endAt, int minViewCount, int maxViewCount, int minCommentCount, int maxCommentCount)
+        public async Task<IDataResult<PostListDto>> GetAllByUserIdOnFilter(int userId, FilterBy filterBy, OrderBy orderBy, bool isAscending, int takeSize, int categoryId, DateTime startAt, DateTime endAt, int minViewCount, int maxViewCount, int minCommentCount, int maxCommentCount)
         {
-            throw new NotImplementedException();
+            var anyUser = await _userManager.Users.AnyAsync(u => u.Id == userId);
+            if (!anyUser)
+            {
+                return new DataResult<PostListDto>(ResultStatus.Error, $"User with {userId} number couldn't be found.", null);
+            }
+
+            var userPosts = await UnitOfWork.Posts.GetAllAsync(p => p.IsActive && !p.IsDeleted && p.UserId == userId);
+            List<Post> sortedPosts = new List<Post>();
+
+            switch (filterBy)
+            {
+                case FilterBy.Category:
+                    switch (orderBy)
+                    {
+                        case OrderBy.Date:
+                            sortedPosts = isAscending
+                                ? userPosts.Where(p => p.CategoryId == categoryId).Take(takeSize).OrderBy(p => p.CreatedDate).ToList()
+                                : userPosts.Where(p => p.CategoryId == categoryId).Take(takeSize).OrderByDescending(p => p.CreatedDate).ToList();
+                            break;
+
+                        case OrderBy.ViewCount:
+                            sortedPosts = isAscending
+                                ? userPosts.Where(p => p.CategoryId == categoryId).Take(takeSize).OrderBy(p => p.ViewCount).ToList()
+                                : userPosts.Where(p => p.CategoryId == categoryId).Take(takeSize).OrderByDescending(p => p.ViewCount).ToList();
+                            break;
+
+                        case OrderBy.CommentCount:
+                            sortedPosts = isAscending
+                                ? userPosts.Where(p => p.CategoryId == categoryId).Take(takeSize).OrderBy(p => p.CommentCount).ToList()
+                                : userPosts.Where(p => p.CategoryId == categoryId).Take(takeSize).OrderByDescending(p => p.CommentCount).ToList();
+                            break;
+                    }
+                    break;
+
+                case FilterBy.Date:
+                    switch (orderBy)
+                    {
+                        case OrderBy.Date:
+                            sortedPosts = isAscending
+                                ? userPosts.Where(p => p.Date >= startAt && p.Date <= endAt).Take(takeSize).OrderBy(p => p.CreatedDate).ToList()
+                                : userPosts.Where(p => p.Date >= startAt && p.Date <= endAt).OrderByDescending(p => p.CreatedDate).ToList();
+                            break;
+
+                        case OrderBy.ViewCount:
+                            sortedPosts = isAscending
+                                ? userPosts.Where(p => p.Date >= startAt && p.Date <= endAt).OrderBy(p => p.ViewCount).ToList()
+                                : userPosts.Where(p => p.Date >= startAt && p.Date <= endAt).OrderByDescending(p => p.ViewCount).ToList();
+                            break;
+
+                        case OrderBy.CommentCount:
+                            sortedPosts = isAscending
+                                ? userPosts.Where(p => p.Date >= startAt && p.Date <= endAt).OrderBy(p => p.CommentCount).ToList()
+                                : userPosts.Where(p => p.Date >= startAt && p.Date <= endAt).OrderByDescending(p => p.CommentCount).ToList();
+                            break;
+                    }
+                    break;
+                case FilterBy.ViewCount:
+                    switch (orderBy)
+                    {
+                        case OrderBy.Date:
+                            sortedPosts = isAscending
+                                ? userPosts.Where(p => p.ViewCount >= minViewCount && p.ViewCount <= maxViewCount).Take(takeSize).OrderBy(p => p.CreatedDate).ToList()
+                                : userPosts.Where(p => p.ViewCount >= minViewCount && p.ViewCount <= maxViewCount).OrderByDescending(p => p.CreatedDate).ToList();
+                            break;
+
+                        case OrderBy.ViewCount:
+                            sortedPosts = isAscending
+                                ? userPosts.Where(p => p.ViewCount >= minViewCount && p.ViewCount <= maxViewCount).OrderBy(p => p.ViewCount).ToList()
+                                : userPosts.Where(p => p.ViewCount >= minViewCount && p.ViewCount <= maxViewCount).OrderByDescending(p => p.ViewCount).ToList();
+                            break;
+
+                        case OrderBy.CommentCount:
+                            sortedPosts = isAscending
+                                ? userPosts.Where(p => p.ViewCount >= minViewCount && p.ViewCount <= maxViewCount).OrderBy(p => p.CommentCount).ToList()
+                                : userPosts.Where(p => p.ViewCount >= minViewCount && p.ViewCount <= maxViewCount).OrderByDescending(p => p.CommentCount).ToList();
+                            break;
+                    }
+                    break;
+                case FilterBy.CommentCount:
+                    switch (orderBy)
+                    {
+                        case OrderBy.Date:
+                            sortedPosts = isAscending
+                                ? userPosts.Where(p => p.CommentCount >= minCommentCount && p.CommentCount <= maxCommentCount).Take(takeSize).OrderBy(p => p.CreatedDate).ToList()
+                                : userPosts.Where(p => p.CommentCount >= minCommentCount && p.CommentCount <= maxCommentCount).OrderByDescending(p => p.CreatedDate).ToList();
+                            break;
+                        case OrderBy.ViewCount:
+                            sortedPosts = isAscending
+                                ? userPosts.Where(p => p.CommentCount >= minCommentCount && p.CommentCount <= maxCommentCount).OrderBy(p => p.ViewCount).ToList()
+                                : userPosts.Where(p => p.CommentCount >= minCommentCount && p.CommentCount <= maxCommentCount).OrderByDescending(p => p.ViewCount).ToList();
+                            break;
+                        case OrderBy.CommentCount:
+                            sortedPosts = isAscending
+                                ? userPosts.Where(p => p.CommentCount >= minCommentCount && p.CommentCount <= maxCommentCount).OrderBy(p => p.CommentCount).ToList()
+                                : userPosts.Where(p => p.CommentCount >= minCommentCount && p.CommentCount <= maxCommentCount).OrderByDescending(p => p.CommentCount).ToList();
+                            break;
+                    }
+                    break;
+            }
+            return new DataResult<PostListDto>(ResultStatus.Success, new PostListDto
+            {
+                Posts = sortedPosts
+            });
         }
 
-        public Task<IDataResult<PostListDto>> GetAllByViewCountAsync(bool isAscending, int? takeSize)
+        public async Task<IDataResult<PostListDto>> GetAllByViewCountAsync(bool isAscending, int? takeSize)
         {
-            throw new NotImplementedException();
+            var posts = await UnitOfWork.Posts.GetAllAsync(p => p.IsActive && !p.IsDeleted, p => p.Category, p => p.User);
+            var sortedPosts = isAscending ? posts.OrderBy(p => p.ViewCount) : posts.OrderByDescending(p => p.ViewCount);
+            return new DataResult<PostListDto>(ResultStatus.Success, new PostListDto
+            {
+                Posts = takeSize == null ? sortedPosts.ToList() : sortedPosts.Take(takeSize.Value).ToList()
+            });
         }
 
-        public Task<IDataResult<PostDto>> GetAsync(int postId)
+        public async Task<IDataResult<PostDto>> GetAsync(int postId)
         {
-            throw new NotImplementedException();
+            var post = await UnitOfWork.Posts.GetAsync(p => p.Id == postId, p => p.User, p => p.Category);
+            if (post != null)
+            {
+                post.Comments = await UnitOfWork.Comments.GetAllAsync(c => c.PostId == postId && !c.IsDeleted && c.IsActive);
+                return new DataResult<PostDto>(ResultStatus.Success, new PostDto
+                {
+                    Post = post,
+                    ResultStatus = ResultStatus.Success
+                });
+            }
+            return new DataResult<PostDto>(ResultStatus.Error, Messages.PostMessage.NotFound(isPlural: false), null);
         }
 
-        public Task<IDataResult<PostDto>> GetByIdAsync(int postId, bool includeCategory, bool includeComments, bool includeUser)
+        public async Task<IDataResult<PostDto>> GetByIdAsync(int postId, bool includeCategory, bool includeComments, bool includeUser)
         {
-            throw new NotImplementedException();
+            List<Expression<Func<Post, bool>>> predicates = new List<Expression<Func<Post, bool>>>();
+            List<Expression<Func<Post, object>>> includes = new List<Expression<Func<Post, object>>>();
+            if (includeCategory) includes.Add(p => p.Category);
+            if (includeComments) includes.Add(p => p.Comments);
+            if (includeUser) includes.Add(p => p.User);
+            predicates.Add(p => p.Id == postId);
+            var post = await UnitOfWork.Posts.GetAsyncV2(predicates, includes);
+            if (post == null)
+            {
+                return new DataResult<PostDto>(ResultStatus.Warning, Messages.General.ValidationError(), null, new List<ValidationError>
+                {
+                    new ValidationError
+                    {
+                        PropertyName="postId",
+                        Message = Messages.PostMessage.NotFoundById(postId)
+                    }
+                });
+            }
+            return new DataResult<PostDto>(ResultStatus.Success, new PostDto
+            {
+                Post = post
+            });
         }
 
         public Task<IDataResult<PostUpdateDto>> GetPostUpdateDtoAsync(int postId)
@@ -227,29 +422,105 @@ namespace EEBlog.Services.Concrete
             throw new NotImplementedException();
         }
 
-        public Task<IResult> HardDeleteAsync(int postId)
+        public async Task<IResult> HardDeleteAsync(int postId)
         {
-            throw new NotImplementedException();
+            var result = await UnitOfWork.Posts.AnyAsync(p => p.Id == postId);
+            if (result)
+            {
+                var post = await UnitOfWork.Posts.GetAsync(p => p.Id == postId);
+                await UnitOfWork.Posts.DeleteAsync(post);
+                await UnitOfWork.SaveAsync();
+                return new Result(ResultStatus.Success, Messages.PostMessage.HardDelete(post.Title));
+            }
+            return new Result(ResultStatus.Error, Messages.PostMessage.NotFound(isPlural: false));
         }
 
-        public Task<IResult> IncreaseViewCountAsync(int postId)
+        public async Task<IResult> IncreaseViewCountAsync(int postId)
         {
-            throw new NotImplementedException();
+            var post = await UnitOfWork.Posts.GetAsync(p => p.Id == postId);
+            if (post == null)
+            {
+                return new Result(ResultStatus.Error, Messages.PostMessage.NotFound(isPlural: false));
+            }
+            post.ViewCount += 1;
+            await UnitOfWork.Posts.UpdateAsync(post);
+            await UnitOfWork.SaveAsync();
+            return new Result(ResultStatus.Success, Messages.PostMessage.IncreaseViewCount(post.Title));
         }
 
-        public Task<IDataResult<PostListDto>> SearchAsync(string keyword, int currentPage = 1, int pageSize = 5, bool isAscending = false)
+        public async Task<IDataResult<PostListDto>> SearchAsync(string keyword, int currentPage = 1, int pageSize = 5, bool isAscending = false)
         {
-            throw new NotImplementedException();
+            pageSize = pageSize > 20 ? 20 : pageSize;
+            if (string.IsNullOrWhiteSpace(keyword))
+            {
+                var posts = await UnitOfWork.Posts.GetAllAsync(p => p.IsActive && !p.IsDeleted, p => p.Category, p => p.User);
+                var sortedPosts = isAscending
+                    ? posts.OrderBy(p => p.CreatedDate).Skip((currentPage - 1) * pageSize).Take(pageSize).ToList()
+                    : posts.OrderByDescending(p => p.CreatedDate).Skip((currentPage - 1) * pageSize).Take(pageSize).ToList();
+                return new DataResult<PostListDto>(ResultStatus.Success, new PostListDto
+                {
+                    Posts = sortedPosts,
+                    CurrentPage = currentPage,
+                    PageSize = pageSize,
+                    TotalCount = posts.Count,
+                    IsAscending = isAscending
+                });
+            }
+            var searchedPosts = await UnitOfWork.Posts.SearchAsync(new List<Expression<Func<Post, bool>>>
+            {
+                (p)=>p.Title.Contains(keyword),
+                (p)=>p.Category.Name.Contains(keyword),
+                (p)=>p.SeoDescription.Contains(keyword),
+                (p)=>p.SeoTags.Contains(keyword)
+            }, p => p.Category, p => p.User);
+
+            var searchedAndSortedPosts = isAscending
+                ? searchedPosts.OrderBy(p => p.CreatedDate).Skip((currentPage - 1) * pageSize).Take(pageSize).ToList()
+                : searchedPosts.OrderByDescending(p => p.CreatedDate).Skip((currentPage - 1) * pageSize).Take(pageSize).ToList();
+            return new DataResult<PostListDto>(ResultStatus.Success, new PostListDto
+            {
+                Posts = searchedAndSortedPosts,
+                CurrentPage = currentPage,
+                PageSize = pageSize,
+                TotalCount = searchedPosts.Count,
+                IsAscending = isAscending
+            });
         }
 
-        public Task<IDataResult<PostDto>> UndoDeleteAsync(int postId, string modifiedByName)
+        public async Task<IDataResult<PostDto>> UndoDeleteAsync(int postId, string modifiedByName)
         {
-            throw new NotImplementedException();
+            var post = await UnitOfWork.Posts.GetAsync(p => p.Id == postId);
+            if (post != null)
+            {
+                post.IsDeleted = false;
+                post.IsActive = true;
+                post.ModifiedByName = modifiedByName;
+                post.ModifiedDate = DateTime.Now;
+                var deletedPost = await UnitOfWork.Posts.UpdateAsync(post);
+                await UnitOfWork.SaveAsync();
+                return new DataResult<PostDto>(ResultStatus.Success, Messages.PostMessage.UndoDelete(post.Title), new PostDto
+                {
+                    Post = deletedPost,
+                    ResultStatus = ResultStatus.Success,
+                    Message = Messages.PostMessage.UndoDelete(post.Title)
+                });
+            }
+            return new DataResult<PostDto>(ResultStatus.Error, Messages.PostMessage.NotFound(isPlural: false), new PostDto
+            {
+                Post= null,
+                ResultStatus = ResultStatus.Error,
+                Message = Messages.PostMessage.NotFound(isPlural: false)
+            });
         }
 
-        public Task<IResult> UpdateAsync(PostUpdateDto postUpdateDto, string modifiedByName)
+        public async Task<IResult> UpdateAsync(PostUpdateDto postUpdateDto, string modifiedByName)
         {
-            throw new NotImplementedException();
+            var oldPost = await UnitOfWork.Posts.GetAsync(p => p.Id == postUpdateDto.Id);
+            var post = Mapper.Map<PostUpdateDto, Post>(postUpdateDto, oldPost);
+            post.ModifiedByName = modifiedByName;
+            await UnitOfWork.Posts.UpdateAsync(post);
+            await UnitOfWork.SaveAsync();
+            return new Result(ResultStatus.Success, Messages.PostMessage.Update(post.Title));
         }
     }
 }
