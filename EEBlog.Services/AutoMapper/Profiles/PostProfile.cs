@@ -14,9 +14,8 @@ namespace EEBlog.Services.AutoMapper.Profiles
         public PostProfile()
         {
             CreateMap<PostAddDto, Post>().ForMember(dest=>dest.CreatedDate,opt=>opt.MapFrom(x=>DateTime.Now));
-            //Add later
-            //CreateMap<PostUpdate, Post>
-            //CreateMap<Post, PostUpdateDto>
+            CreateMap<PostUpdateDto, Post>().ForMember(dest=>dest.ModifiedDate, opt=>opt.MapFrom(x=>DateTime.Now));
+            CreateMap<Post, PostUpdateDto>();
         }
     }
 }

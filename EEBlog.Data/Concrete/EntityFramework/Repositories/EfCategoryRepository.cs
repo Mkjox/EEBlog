@@ -17,7 +17,7 @@ namespace EEBlog.Data.Concrete.EntityFramework.Repositories
         {
         }
 
-        /*public async Task<Category> GetById(int categoryId)
+        public async Task<Category> GetById(int categoryId)
         {
             return await EEBlogContext.Categories.SingleOrDefaultAsync(c => c.Id == categoryId);
         }
@@ -26,8 +26,8 @@ namespace EEBlog.Data.Concrete.EntityFramework.Repositories
         {
             get
             {
-               return _context as EEBlogContext;
+                return _context as EEBlogContext;
             }
-        }*/
+        }
     }
 }

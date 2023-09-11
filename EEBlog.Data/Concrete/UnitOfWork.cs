@@ -13,26 +13,29 @@ namespace EEBlog.Data.Concrete
     {
         private readonly EEBlogContext _context;
         private EfPostRepository _postRepository;
+        private EfCategoryRepository _categoryRepository;
+        private EfCommentRepository _commentRepository;
 
-
-
-
-
-
-        public IPostRepository Posts => throw new NotImplementedException();
-
-        public ICommentRepository Comments => throw new NotImplementedException();
-
-        public ICategoryRepository Categories => throw new NotImplementedException();
-
-        public ValueTask DisposeAsync()
+        public UnitOfWork(EEBlogContext context)
         {
-            throw new NotImplementedException();
+            _context = context;
         }
 
-        public Task<int> SaveAsync()
+        public IPostRepository Posts => _postRepository ??= new EfPostRepository(_context);
+
+        public ICategoryRepository Categories => _categoryRepository ??= new EfCategoryRepository(_context);
+
+        public ICommentRepository Comments => _commentRepository ??= new EfCommentRepository(_context);
+
+
+        public async ValueTask DisposeAsync()
         {
-            throw new NotImplementedException();
+            await _context.DisposeAsync();
+        }
+
+        public async Task<int> SaveAsync()
+        {
+            return await _context.SaveChangesAsync();
         }
     }
 }
