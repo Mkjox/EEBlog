@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 
 namespace EEBlog.Entities.Dtos
 {
-    public class RoleDto
+    public class CommentListDto
     {
-        public Role Role { get; set; }
+        public IList<Comment> Comments { get; set; }
     }
 }
