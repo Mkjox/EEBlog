@@ -1,20 +1,31 @@
 using AutoMapper;
+using EEBlog.Mvc.Filters;
+using EEBlog.Services.AutoMapper.Profiles;
+using System.Text.Json.Serialization;
 
 namespace EEBlog.Mvc
 {
     public class Program
     {
-        public Startup(IConfiguration configuration)
+        public Program(IConfiguration configuration)
         {
-            configuration = configuration;
+            Configuration = configuration;
         }
 
         public IConfiguration Configuration { get; }
 
-        public void ConfigureServices (IServiceCollection services)
+        public void ConfigureServices(IServiceCollection services)
         {
             services.AddSession();
-            services.AddAutoMapper(typeof(CategoryProfile))
+            services.AddControllersWithViews(options =>
+            {
+                options.ModelBindingMessageProvider.SetValueMustNotBeNullAccessor(value => "This area must not be empty.");
+                options.Filters.Add<MvcExceptionFilter>();
+            }).AddRazorRuntimeCompilation().AddJsonOptions(OptionsBuilderConfigurationExtensions =>
+            {
+                opt.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                opt.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
+            });
         }
     }
 }
