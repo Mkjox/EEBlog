@@ -1,4 +1,5 @@
-﻿using EEBlog.Shared.Utilities.Results.ComplexTypes;
+﻿using EEBlog.Shared.Entities.Concrete;
+using EEBlog.Shared.Utilities.Results.ComplexTypes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,5 +13,6 @@ namespace EEBlog.Shared.Utilities.Results.Abstract
         public ResultStatus ResultStatus { get; }
         public string Message { get; }
         public Exception Exception { get; }
+        public IEnumerable<ValidationError> ValidationErrors { get; set; }
     }
 }
